@@ -33,7 +33,7 @@ main (int argc, char **argv)
   double fromX = 0;
   double toX = 0;
   int n = 100;
-	char *progname= argv[0];
+  char *progname= argv[0];
 
   points_t pts;
   spline_t spl;
