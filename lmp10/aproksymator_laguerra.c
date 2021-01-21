@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 /* UWAGA: liczbę używanych f. bazowych można ustawić przez wartość
           zmiennej środowiskowej APPROX_BASE_SIZE
@@ -16,14 +18,34 @@
  * i- numer funkcji 
  * x - wspolrzedna dla ktorej obliczana jest wartosc funkcji
  */
-double
-fi(double a, double b, int n, int i, double x)
+double dx = 0.01;
+double laguerr(int n, double x)
 {
-	double		h = (b - a) / (n - 1);
-	double		h3 = h * h * h;
-	int		hi[5] = {i - 2, i - 1, i, i + 1, i + 2};
-	double		hx[5];
-	int		j;
+	if (n==0)
+		return 1;
+	if (n==1)
+		return 1 - x;
+	return ((2.0 * n - 1 -x)  * laguerr(n-1, x) - (n-1)*(n-1) * laguerr(n - 2,x));
+}
+double calka_trapez(double a, double b, double ya, double yb)
+{
+	return (ya + yb) * (b - a) / 2;
+}
+double pochodna(double val1, double val2, double dx)
+{
+	return (val2 - val1) / dx;
+}
+double fwagowa(double x)
+{
+	return pow(M_E, -x);	
+}
+double fi(double a, double b, int n, int i, double x)
+{
+	
+	double h = (b - a) / (n - 1);
+	double hx[5];
+	int hi[5] = {i-2, i-1, i, i+1, i+2};
+	int j;
 
 	for (j = 0; j < 5; j++)
 		hx[j] = a + h * hi[j];
@@ -31,110 +53,66 @@ fi(double a, double b, int n, int i, double x)
 	if ((x < hx[0]) || (x > hx[4]))
 		return 0;
 	else if (x >= hx[0] && x <= hx[1])
-		return 1 / h3 * (x - hx[0]) * (x - hx[0]) * (x - hx[0]);
+		return calka_trapez(hx[0], hx[1], laguerr(i, hx[0]), laguerr(i, hx[1]));
 	else if (x > hx[1] && x <= hx[2])
-		return 1 / h3 * (h3 + 3 * h * h * (x - hx[1]) + 3 * h * (x - hx[1]) * (x - hx[1]) - 3 * (x - hx[1]) * (x - hx[1]) * (x - hx[1]));
+		return calka_trapez(hx[1], hx[2], laguerr(i, hx[1]), laguerr(i, hx[2]));
 	else if (x > hx[2] && x <= hx[3])
-		return 1 / h3 * (h3 + 3 * h * h * (hx[3] - x) + 3 * h * (hx[3] - x) * (hx[3] - x) - 3 * (hx[3] - x) * (hx[3] - x) * (hx[3] - x));
+		return calka_trapez(hx[2], hx[3], laguerr(i, hx[2]), laguerr(i, hx[3]));   
 	else			/* if (x > hx[3]) && (x <= hx[4]) */
-		return 1 / h3 * (hx[4] - x) * (hx[4] - x) * (hx[4] - x);
+		return calka_trapez(hx[3], hx[4], laguerr(i, hx[3]), laguerr(i, hx[4]));
+
 }
 
 /* Pierwsza pochodna fi */
-double
-dfi(double a, double b, int n, int i, double x)
+double dfi(double a, double b, int n, int i, double x)
 {
-	double		h = (b - a) / (n - 1);
-	double		h3 = h * h * h;
-	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
-	double		hx      [5];
-	int		j;
+	double h = (b - a) / (n - 1);
+	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double hx [5];
+	int j;
 
 	for (j = 0; j < 5; j++)
 		hx[j] = a + h * hi[j];
 
 	if ((x < hx[0]) || (x > hx[4]))
 		return 0;
-	else if (x >= hx[0] && x <= hx[1])
-		return 3 / h3 * (x - hx[0]) * (x - hx[0]);
-	else if (x > hx[1] && x <= hx[2])
-		return 1 / h3 * (3 * h * h + 6 * h * (x - hx[1]) - 9 * (x - hx[1]) * (x - hx[1]));
-	else if (x > hx[2] && x <= hx[3])
-		return 1 / h3 * (-3 * h * h - 6 * h * (hx[3] - x) + 9 * (hx[3] - x) * (hx[3] - x));
-	else			/* if (x > hx[3]) && (x <= hx[4]) */
-		return -3 / h3 * (hx[4] - x) * (hx[4] - x);
+	else if (x >= hx[0] && x <= hx[4])
+		return pochodna(laguerr(i, x), laguerr(i, x + dx), dx);
 }
 
 /* Druga pochodna fi */
-double
-d2fi(double a, double b, int n, int i, double x)
+double d2fi(double a, double b, int n, int i, double x)
 {
-	double		h = (b - a) / (n - 1);
-	double		h3 = h * h * h;
-	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
-	double		hx      [5];
-	int		j;
+	double h = (b - a) / (n - 1);
+	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double hx [5];
+	int j;
 
 	for (j = 0; j < 5; j++)
 		hx[j] = a + h * hi[j];
 
 	if ((x < hx[0]) || (x > hx[4]))
 		return 0;
-	else if (x >= hx[0] && x <= hx[1])
-		return 6 / h3 * (x - hx[0]);
-	else if (x > hx[1] && x <= hx[2])
-		return 1 / h3 * (6 * h - 18 * (x - hx[1]));
-	else if (x > hx[2] && x <= hx[3])
-		return 1 / h3 * (6 * h  -18 * (hx[3] - x));
-	else			/* if (x > hx[3]) && (x <= hx[4]) */
-		return 6 / h3 * (hx[4] - x);
+	else if (x >= hx[0] && x <= hx[4])
+		return pochodna(dfi(a, b, n, i, x), dfi(a, b, n, i, x + dx), dx);
 }
 
 /* Trzecia pochodna fi */
-double
-d3fi(double a, double b, int n, int i, double x)
+double d3fi(double a, double b, int n, int i, double x)
 {
-	double		h = (b - a) / (n - 1);
-	double		h3 = h * h * h;
-	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
-	double		hx      [5];
-	int		j;
+	double h = (b - a) / (n - 1);
+	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
+	double hx [5];
+	int j;
 
 	for (j = 0; j < 5; j++)
 		hx[j] = a + h * hi[j];
 
 	if ((x < hx[0]) || (x > hx[4]))
 		return 0;
-	else if (x >= hx[0] && x <= hx[1])
-		return 6 / h3;
-	else if (x > hx[1] && x <= hx[2])
-		return -18 / h3;
-	else if (x > hx[2] && x <= hx[3])
-		return 18 / h3;
-	else			/* if (x > hx[3]) && (x <= hx[4]) */
-		return -6 / h3;
-}
+	else if (x >= hx[0] && x <= hx[4])
+		return pochodna(d2fi(a, b, n, i, x), d2fi(a, b, n, i, x + dx), dx);
 
-/* Pomocnicza f. do rysowania bazy */
-double
-xfi(double a, double b, int n, int i, FILE *out)
-{
-	double		h = (b - a) / (n - 1);
-	double		h3 = h * h * h;
-	int		hi         [5] = {i - 2, i - 1, i, i + 1, i + 2};
-	double		hx      [5];
-	int		j;
-
-	for (j = 0; j < 5; j++)
-		hx[j] = a + h * hi[j];
-
-	fprintf( out, "# nb=%d, i=%d: hi=[", n, i );
-	for( j= 0; j < 5; j++ )
-		fprintf( out, " %d", hi[j] );
-	fprintf( out, "] hx=[" );
-	for( j= 0; j < 5; j++ )
-		fprintf( out, " %g", hx[j] );
-	fprintf( out, "]\n" );
 }
 
 void
@@ -179,7 +157,7 @@ make_spl(points_t * pts, spline_t * spl)
 	for (j = 0; j < nb; j++) {
 		for (i = 0; i < nb; i++)
 			for (k = 0; k < pts->n; k++)
-				add_to_entry_matrix(eqs, j, i, fi(a, b, nb, i, x[k]) * fi(a, b, nb, j, x[k]));
+				add_to_entry_matrix(eqs, j, i, fi(a,b, nb, i, x[k]) * fi(a, b, nb, j, x[k]));
 
 		for (k = 0; k < pts->n; k++)
 			add_to_entry_matrix(eqs, j, nb, y[k] * fi(a, b, nb, j, x[k]));
@@ -206,7 +184,7 @@ make_spl(points_t * pts, spline_t * spl)
 			spl->f2[i] = 0;
 			spl->f3[i] = 0;
 			for (k = 0; k < nb; k++) {
-				double		ck = get_entry_matrix(eqs, k, nb);
+				double ck = get_entry_matrix(eqs, k, nb);
 				spl->f[i]  += ck * fi  (a, b, nb, k, xx);
 				spl->f1[i] += ck * dfi (a, b, nb, k, xx);
 				spl->f2[i] += ck * d2fi(a, b, nb, k, xx);
