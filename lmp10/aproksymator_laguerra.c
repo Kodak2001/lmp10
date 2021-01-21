@@ -43,23 +43,7 @@ double fi(double a, double b, int n, int i, double x)
 {
 	
 	double h = (b - a) / (n - 1);
-	double hx[5];
-	int hi[5] = {i-2, i-1, i, i+1, i+2};
-	int j;
-
-	for (j = 0; j < 5; j++)
-		hx[j] = a + h * hi[j];
-
-	if ((x < hx[0]) || (x > hx[4]))
-		return 0;
-	else if (x >= hx[0] && x <= hx[1])
-		return calka_trapez(hx[0], hx[1], laguerr(i, hx[0]), laguerr(i, hx[1]));
-	else if (x > hx[1] && x <= hx[2])
-		return calka_trapez(hx[1], hx[2], laguerr(i, hx[1]), laguerr(i, hx[2]));
-	else if (x > hx[2] && x <= hx[3])
-		return calka_trapez(hx[2], hx[3], laguerr(i, hx[2]), laguerr(i, hx[3]));   
-	else			/* if (x > hx[3]) && (x <= hx[4]) */
-		return calka_trapez(hx[3], hx[4], laguerr(i, hx[3]), laguerr(i, hx[4]));
+	return calka_trapez(x, x + h, laguerr(i, x), laguerr(i, x + h));
 
 }
 
