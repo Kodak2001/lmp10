@@ -18,7 +18,7 @@
  * i- numer funkcji 
  * x - wspolrzedna dla ktorej obliczana jest wartosc funkcji
  */
-double dx = 0.01;
+
 double laguerr(int n, double x)
 {
 	if (n==0)
@@ -42,24 +42,18 @@ double fi(int i, double x)
 }
 
 /* Pierwsza pochodna fi */
-double dfi(double a, double b, int n, int i, double x)
+double dfi(int i, double x)
 {
-	double h = (b - a) / (n - 1);
+	/*i double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double hx [5];
-	int j;
-		//teraz nad tym mysle i w pochodnych bedziemy potrzebowali jakiegos przedzialu
-	for (j = 0; j < 5; j++)
-		hx[j] = a + h * hi[j];
-
-	if ((x < hx[0]) || (x > hx[4]))
-		return 0;
-	else if (x >= hx[0] && x <= hx[4])
-		return pochodna(laguerr(i, x), laguerr(i, x + dx), dx);
+	int j; */
+	double delta = 1.0e-6;
+	return pochodna(laguerr(i, x), laguerr(i, x + delta), delta);
 }
+//chwilowo wyjebalem reszte pochodnych zeby sie kompilowalo
 
-/* Druga pochodna fi */
-double d2fi(double a, double b, int n, int i, double x)
+/*double d2fi(double a, double b, int n, int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
@@ -75,7 +69,7 @@ double d2fi(double a, double b, int n, int i, double x)
 		return pochodna(dfi(a, b, n, i, x), dfi(a, b, n, i, x + dx), dx);
 }
 
-/* Trzecia pochodna fi */
+
 double d3fi(double a, double b, int n, int i, double x)
 {
 	double h = (b - a) / (n - 1);
@@ -89,9 +83,9 @@ double d3fi(double a, double b, int n, int i, double x)
 	if ((x < hx[0]) || (x > hx[4]))
 		return 0;
 	else if (x >= hx[0] && x <= hx[4])
-		return pochodna(d2fi(a, b, n, i, x), d2fi(a, b, n, i, x + dx), dx);
+		return pochodna(d2fi(i, x), d2fi(a, b, n, i, x + dx), dx);
 
-}
+} */
 
 void
 make_spl(points_t * pts, spline_t * spl)
@@ -149,7 +143,7 @@ make_spl(points_t * pts, spline_t * spl)
 		spl->n = 0;
 		return;
 	}
-#ifdef DEBUG /*
+/*#ifdef DEBUG 
 	write_matrix(eqs, stdout);
 #endif */
 
@@ -163,15 +157,15 @@ make_spl(points_t * pts, spline_t * spl)
 			spl->f3[i] = 0;
 			for (k = 0; k < nb; k++) {
 				double ck = get_entry_matrix(eqs, k, nb);
-				spl->f[i]  += ck * fi  (a, b, nb, k, xx);
-				spl->f1[i] += ck * dfi (a, b, nb, k, xx);
-				spl->f2[i] += ck * d2fi(a, b, nb, k, xx);
-				spl->f3[i] += ck * d3fi(a, b, nb, k, xx);
+				spl->f[i]  += ck * fi  (k, xx);
+				spl->f1[i] += ck * dfi (k, xx);
+				spl->f2[i] += ck * d2fi(k, xx);
+				spl->f3[i] += ck * d3fi(k, xx);
 			}
 		}
 	}
 
-#ifdef DEBUG /*
+/*#ifdef DEBUG 
 	{
 		FILE           *tst = fopen("debug_spline_plot.txt", "w");
 		double		dx = (b - a) / (TESTBASE - 1);
