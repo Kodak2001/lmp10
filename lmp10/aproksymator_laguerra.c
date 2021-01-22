@@ -24,7 +24,7 @@ double laguerr(int n, double x)
 	if (n==0)
 		return 1;
 	if (n==1)
-		return 1 - x;
+		return 1 - x; //ten laguerr na pewno dziala? XD
 	return ((2.0 * n - 1 -x)  * laguerr(n-1, x) - (n-1)*(n-1) * laguerr(n - 2,x));
 }
 double calka_trapez(double a, double b, double ya, double yb)
@@ -39,16 +39,16 @@ double fwagowa(double x)
 {
 	return pow(M_E, -x);	
 }
-double fi(double a, double b, int n, int i, double x)
+double fi(int i, double x)
 {
 	
-	double h = (b - a) / (n - 1);
+	double h = (b - a) / (n - 1); //nie potrzebujemy ani a ani b
 	return calka_trapez(x, x + h, laguerr(i, x), laguerr(i, x + h));
 
 }
 
 /* Pierwsza pochodna fi */
-double dfi(double a, double b, int n, int i, double x)
+double dfi(int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
@@ -65,7 +65,7 @@ double dfi(double a, double b, int n, int i, double x)
 }
 
 /* Druga pochodna fi */
-double d2fi(double a, double b, int n, int i, double x)
+double d2fi(int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
@@ -82,7 +82,7 @@ double d2fi(double a, double b, int n, int i, double x)
 }
 
 /* Trzecia pochodna fi */
-double d3fi(double a, double b, int n, int i, double x)
+double d3fi(int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
@@ -117,7 +117,7 @@ make_spl(points_t * pts, spline_t * spl)
 
 	eqs = make_matrix(nb, nb + 1);
 
-#ifdef DEBUG
+/*#ifdef DEBUG
 #define TESTBASE 500
 	{
 		FILE           *tst = fopen("debug_base_plot.txt", "w");
@@ -136,7 +136,7 @@ make_spl(points_t * pts, spline_t * spl)
 		}
 		fclose(tst);
 	}
-#endif
+#endif*/
 
 	for (j = 0; j < nb; j++) {
 		for (i = 0; i < nb; i++)
@@ -147,17 +147,17 @@ make_spl(points_t * pts, spline_t * spl)
 			add_to_entry_matrix(eqs, j, nb, y[k] * fi(a, b, nb, j, x[k]));
 	}
 
-#ifdef DEBUG
+/*#ifdef DEBUG
 	write_matrix(eqs, stdout);
-#endif
+#endif*/
 
 	if (piv_ge_solver(eqs)) {
 		spl->n = 0;
 		return;
 	}
-#ifdef DEBUG
+#ifdef DEBUG /*
 	write_matrix(eqs, stdout);
-#endif
+#endif */
 
 	if (alloc_spl(spl, nb) == 0) {
 		for (i = 0; i < spl->n; i++) {
@@ -169,15 +169,15 @@ make_spl(points_t * pts, spline_t * spl)
 			spl->f3[i] = 0;
 			for (k = 0; k < nb; k++) {
 				double ck = get_entry_matrix(eqs, k, nb);
-				spl->f[i]  += ck * fi  (a, b, nb, k, xx);
-				spl->f1[i] += ck * dfi (a, b, nb, k, xx);
-				spl->f2[i] += ck * d2fi(a, b, nb, k, xx);
-				spl->f3[i] += ck * d3fi(a, b, nb, k, xx);
+				spl->f[i]  += ck * fi  (k, xx);
+				spl->f1[i] += ck * dfi (k, xx);
+				spl->f2[i] += ck * d2fi(k, xx);
+				spl->f3[i] += ck * d3fi(k, xx);
 			}
 		}
 	}
 
-#ifdef DEBUG
+#ifdef DEBUG /*
 	{
 		FILE           *tst = fopen("debug_spline_plot.txt", "w");
 		double		dx = (b - a) / (TESTBASE - 1);
@@ -197,6 +197,6 @@ make_spl(points_t * pts, spline_t * spl)
 		}
 		fclose(tst);
 	}
-#endif
+#endif */
 
 }
