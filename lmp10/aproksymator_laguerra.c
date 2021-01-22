@@ -24,7 +24,7 @@ double laguerr(int n, double x)
 	if (n==0)
 		return 1;
 	if (n==1)
-		return 1 - x; //ten laguerr na pewno dziala? XD
+		return 1 - x;
 	return ((2.0 * n - 1 -x)  * laguerr(n-1, x) - (n-1)*(n-1) * laguerr(n - 2,x));
 }
 double calka_trapez(double a, double b, double ya, double yb)
@@ -35,26 +35,20 @@ double pochodna(double val1, double val2, double dx)
 {
 	return (val2 - val1) / dx;
 }
-double fwagowa(double x)
-{
-	return pow(M_E, -x);	
-}
 double fi(int i, double x)
-{
-	
-	double h = (b - a) / (n - 1); //nie potrzebujemy ani a ani b
-	return calka_trapez(x, x + h, laguerr(i, x), laguerr(i, x + h));
-
+{	
+	//wydaje sie zbyt proste by byc realne ale chuj z tym
+	return laguerr(i, x);
 }
 
 /* Pierwsza pochodna fi */
-double dfi(int i, double x)
+double dfi(double a, double b, int n, int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double hx [5];
 	int j;
-
+		//teraz nad tym mysle i w pochodnych bedziemy potrzebowali jakiegos przedzialu
 	for (j = 0; j < 5; j++)
 		hx[j] = a + h * hi[j];
 
@@ -65,7 +59,7 @@ double dfi(int i, double x)
 }
 
 /* Druga pochodna fi */
-double d2fi(int i, double x)
+double d2fi(double a, double b, int n, int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
@@ -82,7 +76,7 @@ double d2fi(int i, double x)
 }
 
 /* Trzecia pochodna fi */
-double d3fi(int i, double x)
+double d3fi(double a, double b, int n, int i, double x)
 {
 	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
@@ -141,10 +135,10 @@ make_spl(points_t * pts, spline_t * spl)
 	for (j = 0; j < nb; j++) {
 		for (i = 0; i < nb; i++)
 			for (k = 0; k < pts->n; k++)
-				add_to_entry_matrix(eqs, j, i, fi(a,b, nb, i, x[k]) * fi(a, b, nb, j, x[k]));
-
+				add_to_entry_matrix(eqs, j, i, fi(i, x[k]) * fi( j, x[k]));
+					//poprawilem w fi na 2 arguemnty zamiast 5
 		for (k = 0; k < pts->n; k++)
-			add_to_entry_matrix(eqs, j, nb, y[k] * fi(a, b, nb, j, x[k]));
+			add_to_entry_matrix(eqs, j, nb, y[k] * fi( j, x[k]));
 	}
 
 /*#ifdef DEBUG
@@ -169,10 +163,10 @@ make_spl(points_t * pts, spline_t * spl)
 			spl->f3[i] = 0;
 			for (k = 0; k < nb; k++) {
 				double ck = get_entry_matrix(eqs, k, nb);
-				spl->f[i]  += ck * fi  (k, xx);
-				spl->f1[i] += ck * dfi (k, xx);
-				spl->f2[i] += ck * d2fi(k, xx);
-				spl->f3[i] += ck * d3fi(k, xx);
+				spl->f[i]  += ck * fi  (a, b, nb, k, xx);
+				spl->f1[i] += ck * dfi (a, b, nb, k, xx);
+				spl->f2[i] += ck * d2fi(a, b, nb, k, xx);
+				spl->f3[i] += ck * d3fi(a, b, nb, k, xx);
 			}
 		}
 	}
