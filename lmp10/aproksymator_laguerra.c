@@ -53,9 +53,9 @@ double dfi(int i, double x)
 }
 //chwilowo wyjebalem reszte pochodnych zeby sie kompilowalo
 
-/*double d2fi(double a, double b, int n, int i, double x)
-{
-	double h = (b - a) / (n - 1);
+double d2fi(int i, double x)
+{ 
+	/*double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double hx [5];
 	int j;
@@ -65,14 +65,17 @@ double dfi(int i, double x)
 
 	if ((x < hx[0]) || (x > hx[4]))
 		return 0;
-	else if (x >= hx[0] && x <= hx[4])
+	else if (x >= hx[0] && x <= hx[4]) 
 		return pochodna(dfi(a, b, n, i, x), dfi(a, b, n, i, x + dx), dx);
+		*/
+	return 0;
+		
 }
 
 
-double d3fi(double a, double b, int n, int i, double x)
-{
-	double h = (b - a) / (n - 1);
+double d3fi(int i, double x)
+{ 
+/*	double h = (b - a) / (n - 1);
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double hx [5];
 	int j;
@@ -84,8 +87,9 @@ double d3fi(double a, double b, int n, int i, double x)
 		return 0;
 	else if (x >= hx[0] && x <= hx[4])
 		return pochodna(d2fi(i, x), d2fi(a, b, n, i, x + dx), dx);
-
-} */
+*/
+	return 0;
+} 
 
 void
 make_spl(points_t * pts, spline_t * spl)
@@ -160,7 +164,7 @@ make_spl(points_t * pts, spline_t * spl)
 				spl->f[i]  += ck * fi  (k, xx);
 				spl->f1[i] += ck * dfi (k, xx);
 				spl->f2[i] += ck * d2fi(k, xx);
-				spl->f3[i] += ck * d3fi(k, xx);
+				spl->f3[i] += ck * d3fi(k, xx); 
 			}
 		}
 	}
