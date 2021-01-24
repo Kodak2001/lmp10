@@ -4,9 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-#define _USE_MATH_DEFINES
 #include <math.h>
-
+#define DEBUG
 /* UWAGA: liczbę używanych f. bazowych można ustawić przez wartość
           zmiennej środowiskowej APPROX_BASE_SIZE
 */
@@ -18,7 +17,15 @@
  * i- numer funkcji 
  * x - wspolrzedna dla ktorej obliczana jest wartosc funkcji
  */
-
+double delta = 1.0e-6;
+int silnia(int n)
+{
+	if (n == 0)
+		return 1;
+	if (n == 1)
+		return 1;
+	return n*silnia(n-1);
+}
 double laguerr(int n, double x)
 {
 	if (n==0)
@@ -38,7 +45,7 @@ double pochodna(double val1, double val2, double dx)
 double fi(int i, double x)
 {	
 	//wydaje sie zbyt proste by byc realne ale chuj z tym
-	return laguerr(i, x);
+	return (laguerr(i, x) / silnia(i));
 }
 
 /* Pierwsza pochodna fi */
@@ -48,7 +55,6 @@ double dfi(int i, double x)
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double hx [5];
 	int j; */
-	double delta = 1.0e-6;
 	return pochodna(laguerr(i, x), laguerr(i, x + delta), delta);
 }
 //chwilowo wyjebalem reszte pochodnych zeby sie kompilowalo
@@ -68,7 +74,7 @@ double d2fi(int i, double x)
 	else if (x >= hx[0] && x <= hx[4]) 
 		return pochodna(dfi(a, b, n, i, x), dfi(a, b, n, i, x + dx), dx);
 		*/
-	return 0;
+	return pochodna(dfi(i,x), dfi(i, x + delta), delta);
 		
 }
 
@@ -88,7 +94,7 @@ double d3fi(int i, double x)
 	else if (x >= hx[0] && x <= hx[4])
 		return pochodna(d2fi(i, x), d2fi(a, b, n, i, x + dx), dx);
 */
-	return 0;
+	return pochodna(d2fi(i, x), d2fi(i, x + delta), delta);
 } 
 
 void
@@ -106,29 +112,26 @@ make_spl(points_t * pts, spline_t * spl)
 
 	if( nbEnv != NULL && atoi( nbEnv ) > 0 )
 		nb = atoi( nbEnv );
-
 	eqs = make_matrix(nb, nb + 1);
 
-/*#ifdef DEBUG
+#ifdef DEBUG
 #define TESTBASE 500
 	{
 		FILE           *tst = fopen("debug_base_plot.txt", "w");
 		double		dx = (b - a) / (TESTBASE - 1);
-		for( j= 0; j < nb; j++ )
-			xfi( a, b, nb, j, tst );
 		for (i = 0; i < TESTBASE; i++) {
 			fprintf(tst, "%g", a + i * dx);
 			for (j = 0; j < nb; j++) {
-				fprintf(tst, " %g", fi  (a, b, nb, j, a + i * dx));
-				fprintf(tst, " %g", dfi (a, b, nb, j, a + i * dx));
-				fprintf(tst, " %g", d2fi(a, b, nb, j, a + i * dx));
-				fprintf(tst, " %g", d3fi(a, b, nb, j, a + i * dx));
+				fprintf(tst, " %g", fi  (j, a + i * dx));
+				fprintf(tst, " %g", dfi (j, a + i * dx));
+				fprintf(tst, " %g", d2fi(j, a + i * dx));
+				fprintf(tst, " %g", d3fi(j, a + i * dx));
 			}
 			fprintf(tst, "\n");
 		}
 		fclose(tst);
 	}
-#endif*/
+#endif
 
 	for (j = 0; j < nb; j++) {
 		for (i = 0; i < nb; i++)
@@ -136,20 +139,22 @@ make_spl(points_t * pts, spline_t * spl)
 				add_to_entry_matrix(eqs, j, i, fi(i, x[k]) * fi( j, x[k]));
 					//poprawilem w fi na 2 arguemnty zamiast 5
 		for (k = 0; k < pts->n; k++)
-			add_to_entry_matrix(eqs, j, nb, y[k] * fi( j, x[k]));
+			add_to_entry_matrix(eqs, j, nb, y[k] * fi(j, x[k]));
 	}
 
-/*#ifdef DEBUG
+#ifdef DEBUG
+	printf("1\n");
 	write_matrix(eqs, stdout);
-#endif*/
+#endif
 
 	if (piv_ge_solver(eqs)) {
 		spl->n = 0;
 		return;
 	}
-/*#ifdef DEBUG 
+#ifdef DEBUG 
+	printf("2\n");
 	write_matrix(eqs, stdout);
-#endif */
+#endif
 
 	if (alloc_spl(spl, nb) == 0) {
 		for (i = 0; i < spl->n; i++) {
@@ -169,7 +174,7 @@ make_spl(points_t * pts, spline_t * spl)
 		}
 	}
 
-/*#ifdef DEBUG 
+#ifdef DEBUG 
 	{
 		FILE           *tst = fopen("debug_spline_plot.txt", "w");
 		double		dx = (b - a) / (TESTBASE - 1);
@@ -180,15 +185,15 @@ make_spl(points_t * pts, spline_t * spl)
 			double d3yi= 0;
 			double xi= a + i * dx;
 			for( k= 0; k < nb; k++ ) {
-							yi += get_entry_matrix(eqs, k, nb) * fi(a, b, nb, k, xi);
-							dyi += get_entry_matrix(eqs, k, nb) * dfi(a, b, nb, k, xi);
-							d2yi += get_entry_matrix(eqs, k, nb) * d2fi(a, b, nb, k, xi);
-							d3yi += get_entry_matrix(eqs, k, nb) * d3fi(a, b, nb, k, xi);
+							yi += get_entry_matrix(eqs, k, nb) * fi(k, xi);
+							dyi += get_entry_matrix(eqs, k, nb) * dfi(k, xi);
+							d2yi += get_entry_matrix(eqs, k, nb) * d2fi(k, xi);
+							d3yi += get_entry_matrix(eqs, k, nb) * d3fi(k, xi);
 			}
 			fprintf(tst, "%g %g %g %g %g\n", xi, yi, dyi, d2yi, d3yi );
 		}
 		fclose(tst);
 	}
-#endif */
+#endif
 
 }
