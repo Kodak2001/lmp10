@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 char *usage =
-  "Usage: %s -s spline-file [-p points-file] [ -g gnuplot-file [-f from_x -t to_x -n n_points ] ]\n"
+  "Usage: %s -s spline-file [-p points-file] [ -g gnuplot-file [-f from_x -t to_x -n n_points ] ] [ -b baza ]\n"
   "            if points-file is given then\n"
   "               reads discrete 2D points from points-file\n"
   "               writes spline approximation to spline-file\n"
@@ -33,6 +33,7 @@ main (int argc, char **argv)
   double fromX = 0;
   double toX = 0;
   int n = 100;
+  int baza = 10;
   char *progname= argv[0];
 
   points_t pts;
@@ -42,7 +43,7 @@ main (int argc, char **argv)
   spl.n = 0;
 
   /* process options, save user choices */
-  while ((opt = getopt (argc, argv, "p:s:g:f:t:n:")) != -1) {
+  while ((opt = getopt (argc, argv, "p:s:g:f:t:n:b:")) != -1) {
     switch (opt) {
     case 'p':
       inp = optarg;
@@ -62,7 +63,10 @@ main (int argc, char **argv)
     case 'n':
       n = atoi (optarg);
       break;
-    default:                   /* '?' */
+    case 'b':
+      baza = atoi (optarg);
+      break;
+    default:            
       fprintf (stderr, usage, progname);
       exit (EXIT_FAILURE);
     }
@@ -100,7 +104,7 @@ main (int argc, char **argv)
       exit (EXIT_FAILURE);
     }
 
-    make_spl (&pts, &spl);
+    make_spl (&pts, &spl, baza);
 
     if( spl.n > 0 )
 			write_spl (&spl, ouf);
