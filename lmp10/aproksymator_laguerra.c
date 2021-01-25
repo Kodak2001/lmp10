@@ -26,26 +26,29 @@ int silnia(int n)
 		return 1;
 	return n*silnia(n-1);
 }
-double laguerr(int n, double x)
+double laguerr(int n, int alfa, double x)
 {
 	if (n==0)
 		return 1;
 	if (n==1)
-		return 1 - x;
-	return ((2.0 * n - 1 -x)  * laguerr(n-1, x) - (n-1)*(n-1) * laguerr(n - 2,x));
+		return 1 + (double)alfa - x;
+	return (((2.0 * n - 1 + alfa - x)  * laguerr(n-1, alfa, x) - (n - 1 + alfa) * laguerr(n - 2, alfa ,x)) / n);
 }
 double calka_trapez(double a, double b, double ya, double yb)
 {
 	return (ya + yb) * (b - a) / 2;
 }
-double pochodna(double val1, double val2, double dx)
+double pochodna(int k, int n, int alfa, double x)
 {
-	return (val2 - val1) / dx;
+	int a = k % 2 == 0 ? 1 : -1;
+	if (k <= n)
+		return a * laguerr(n - k, alfa + k, x);
+	return 0;
 }
 double fi(int i, double x)
 {	
 	//wydaje sie zbyt proste by byc realne ale chuj z tym
-	return (laguerr(i, x) / silnia(i));
+	return laguerr(i, 0, x);
 }
 
 /* Pierwsza pochodna fi */
@@ -55,7 +58,7 @@ double dfi(int i, double x)
 	int hi [5] = {i - 2, i - 1, i, i + 1, i + 2};
 	double hx [5];
 	int j; */
-	return pochodna(laguerr(i, x), laguerr(i, x + delta), delta);
+	return pochodna(1, i, 0, x);
 }
 //chwilowo wyjebalem reszte pochodnych zeby sie kompilowalo
 
@@ -74,7 +77,7 @@ double d2fi(int i, double x)
 	else if (x >= hx[0] && x <= hx[4]) 
 		return pochodna(dfi(a, b, n, i, x), dfi(a, b, n, i, x + dx), dx);
 		*/
-	return pochodna(dfi(i,x), dfi(i, x + delta), delta);
+	return pochodna(2, i, 0, x);
 		
 }
 
@@ -94,7 +97,7 @@ double d3fi(int i, double x)
 	else if (x >= hx[0] && x <= hx[4])
 		return pochodna(d2fi(i, x), d2fi(a, b, n, i, x + dx), dx);
 */
-	return pochodna(d2fi(i, x), d2fi(i, x + delta), delta);
+	return pochodna(3, i, 0, x);
 } 
 
 void
