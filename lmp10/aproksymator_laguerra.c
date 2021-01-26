@@ -6,7 +6,7 @@
 #include <float.h>
 #include <math.h>
 
-double delta = 1.0e-6;
+#define delta 1.0e-6
 
 int silnia(int n)
 {
@@ -32,29 +32,8 @@ double pochodna(int k, int n, int alfa, double x)
 		return a * laguerr(n - k, alfa + k, x);
 	return 0;
 }
-double fi(int i, double x)
-{	
-	return laguerr(i, 0, x);
-}
 
-double dfi(int i, double x)
-{
-	return pochodna(1, i, 0, x);
-}
-
-double d2fi(int i, double x)
-{ 
-	return pochodna(2, i, 0, x);
-		
-}
-
-double d3fi(int i, double x)
-{
-	return pochodna(3, i, 0, x);
-} 
-
-void
-make_spl(points_t * pts, spline_t * spl, int baza)
+void make_spl(points_t * pts, spline_t * spl, int baza)
 {
 
 	matrix_t       *eqs= NULL;
@@ -63,7 +42,7 @@ make_spl(points_t * pts, spline_t * spl, int baza)
 	double		a = x[0];
 	double		b = x[pts->n - 1];
 	int		i, j, k;
-	int		baza;
+	
   
 	eqs = make_matrix(nb, nb + 1);
 
@@ -118,10 +97,10 @@ make_spl(points_t * pts, spline_t * spl, int baza)
 			spl->f3[i] = 0;
 			for (k = 0; k < baza; k++) {
 				ck = get_entry_matrix(eqs, k, baza);
-				spl->f[i]  += ck * fi  (k, xx);
-				spl->f1[i] += ck * dfi (k, xx);
-				spl->f2[i] += ck * d2fi(k, xx);
-				spl->f3[i] += ck * d3fi(k, xx); 
+				spl->f[i]  += ck * laguerr (k, 0, xx);
+				spl->f1[i] += ck * pochodna (1, k, 0, xx); 
+				spl->f2[i] += ck * pochodna (2, k, 0, xx); 
+				spl->f3[i] += ck * pochodna (3, k, 0, xx); 
 			}
 		}
 	}
@@ -130,17 +109,19 @@ make_spl(points_t * pts, spline_t * spl, int baza)
 	{
 		FILE           *tst = fopen("debug_spline_plot.txt", "w");
 		double		dx = (b - a) / (TESTBASE - 1);
+		double yi= 0;
+		double dyi= 0;
+		double d2yi= 0;
+		double d3yi= 0;
+		double xi;
 		for (i = 0; i < TESTBASE; i++) {
-			double yi= 0;
-			double dyi= 0;
-			double d2yi= 0;
-			double d3yi= 0;
-			double xi= a + i * dx;
+
+			xi= a + i * dx;
 			for( k= 0; k < baza; k++ ) {
-							yi += get_entry_matrix(eqs, k, baza) * fi(k, xi);
-							dyi += get_entry_matrix(eqs, k, baza) * dfi(k, xi);
-							d2yi += get_entry_matrix(eqs, k, baza) * d2fi(k, xi);
-							d3yi += get_entry_matrix(eqs, k, baza) * d3fi(k, xi);
+							yi += get_entry_matrix(eqs, k, baza) *   laguerr (k, 0, xi);
+							dyi += get_entry_matrix(eqs, k, baza) *  pochodna (1, k, 0, xi); 
+							d2yi += get_entry_matrix(eqs, k, baza) * pochodna (2, k, 0, xi); 
+							d3yi += get_entry_matrix(eqs, k, baza) * pochodna (3, k, 0, xi); 
 			}
 			fprintf(tst, "%g %g %g %g %g\n", xi, yi, dyi, d2yi, d3yi );
 		}
